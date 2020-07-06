@@ -1,5 +1,8 @@
 [workspace]
 
 members = [
-	"crochet"
+	"crochet",
+	"crochet-tty",
+	"crochet-utmp",
+	"crochet-utmp-sys"
 ]
