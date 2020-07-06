@@ -4,6 +4,8 @@ use std::path::PathBuf;
 fn main() {
     let bindings = bindgen::Builder::default()
         .header("wrapper.h")
+        .impl_debug(true)
+        .derive_debug(true)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()
         .expect("Unable to generate bindings");
