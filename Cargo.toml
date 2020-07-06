@@ -2,6 +2,7 @@
 
 members = [
 	"crochet",
+	"crochet-getty",
 	"crochet-tty",
 	"crochet-utmp",
 	"crochet-utmp-sys"
