@@ -37,23 +37,3 @@ pub fn fchown(fd: RawFd, user: &str, group: &str) -> Result<(), ChownError> {
 pub fn fchmod(fd: RawFd, mode: u32) -> Result<(), std::io::Error> {
     c(unsafe { libc::fchmod(fd, mode) }).map(|_| ())
 }
-
-pub fn set_stdout(fd: RawFd) -> Result<(), std::io::Error> {
-    c(unsafe { libc::dup2(fd, libc::STDOUT_FILENO)}).map(|_| ())
-}
-
-pub fn set_stderr(fd: RawFd) -> Result<(), std::io::Error> {
-    c(unsafe { libc::dup2(fd, libc::STDERR_FILENO)}).map(|_| ())
-}
-
-pub fn set_stdin(fd: RawFd) -> Result<(), std::io::Error> {
-    c(unsafe { libc::dup2(fd, libc::STDIN_FILENO)}).map(|_| ())
-}
-
-pub fn yield_to_login() {
-    let login = CString::new("/bin/login").unwrap();
-    let v = [login.as_ptr(), std::ptr::null()];
-    unsafe {
-	libc::execv(login.as_ptr(), &v as *const *const libc::c_char);
-    }
-}
