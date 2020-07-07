@@ -1,3 +1,4 @@
+use chrono::Local;
 use clap::Clap;
 use std::fs::File;
 use std::io::Write;
@@ -35,22 +36,58 @@ fn clear_tty(file: &mut File) -> std::io::Result<()> {
 }
 
 fn open_streams(fd: RawFd) -> (process::Stdio, process::Stdio, process::Stdio) {
-    let open_stream = || unsafe {
-	process::Stdio::from_raw_fd(fd)
-    };
+    let open_stream = || unsafe { process::Stdio::from_raw_fd(fd) };
     (open_stream(), open_stream(), open_stream())
+}
+
+struct Issue(String);
+
+impl Issue {
+    fn render(self) -> String {
+        let mut rendered = String::with_capacity(self.0.len());
+        let mut chars = self.0.chars().into_iter();
+        while let Some(c) = chars.next() {
+            if c == '\\' {
+                if let Some(opcode) = chars.next() {
+		    use std::fmt::Write as _;
+                    match opcode {
+                        't' => {
+
+                            let date = Local::now();
+                            write!(rendered, "{}", date.format("%H:%M:%S"))
+                                .expect("Failed to write time");
+                        },
+                        _ => {
+			    write!(rendered, "\\{}", opcode)
+    				.expect("Failed to write opcode");
+			},
+                    }
+                }
+            } else {
+                rendered.push(c)
+            }
+        }
+        rendered
+    }
+}
+
+fn get_issue() -> std::io::Result<Issue> {
+    let contents = std::fs::read_to_string("/etc/issue")?;
+    Ok(Issue(contents))
 }
 
 fn main() -> std::io::Result<()> {
     let opts = Options::parse();
     eprintln!("args = {:#?}", opts);
-    
+
     loop {
-	let (mut file, fd) = open_tty(&opts.port)?;
+        let (mut file, fd) = open_tty(&opts.port)?;
         let (stdin, stdout, stderr) = open_streams(fd);
 
         clear_tty(&mut file)?;
-        writeln!(file, "crochet-getty\n")?;
+        let issue = get_issue()?;
+	writeln!(file)?;
+        write!(file, "{}", issue.render())?;
         process::Command::new("/bin/login")
             .stdin(stdin)
             .stdout(stdout)
